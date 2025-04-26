@@ -49,11 +49,20 @@ async function checkProductAvailability() {
     const res = await fetch(URL, { headers });
     const json = await res.json();
 
-    console.log(json);
+    console.log(json.data.length);
 
     //await sendTelegramMessage('Checking Started');
 
     const product = json?.data?.find((p) => p.sku === TARGET_PRODUCT);
+    const avlProducts = json?.data?.filter((p) => p.available === 1);
+
+    if (avlProducts.length > 0) {
+      let avlList = `Currently Available Products: ${avlProducts.length}\n`;
+      avlProducts.forEach((product, idx) => {
+        avlList += `${idx + 1} - ${product.name}\n`;
+      });
+      await sendTelegramMessage(avlList);
+    }
 
     if (product) {
       if (product.available > 0) {
@@ -79,7 +88,7 @@ async function checkProductAvailability() {
 }
 
 // Run every 30 minutes
-cron.schedule('*/30 * * * *', () => {
+cron.schedule('*/15 * * * *', () => {
   console.log(`\n⏰ Checking at ${new Date().toLocaleTimeString()}...`);
   checkProductAvailability();
 });
